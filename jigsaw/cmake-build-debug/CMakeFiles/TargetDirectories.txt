@@ -1,0 +1,3 @@
+/home/raesangur/github/csgames-2024-puzzlehero/jigsaw/cmake-build-debug/CMakeFiles/solver.dir
+/home/raesangur/github/csgames-2024-puzzlehero/jigsaw/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/raesangur/github/csgames-2024-puzzlehero/jigsaw/cmake-build-debug/CMakeFiles/rebuild_cache.dir
