@@ -34,6 +34,7 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <thread>
 #include <vector>
 
 
@@ -43,6 +44,7 @@
 class RGB
 {
 public:
+    RGB() = default;
     RGB(std::uint8_t r, std::uint8_t g, std::uint8_t b) : r{r}, g{g}, b{b}
     {
     }
@@ -64,6 +66,7 @@ public:
 class Piece
 {
 public:
+    Piece() = default;
     Piece(RGB n, RGB s, RGB e, RGB w) : n{n}, s{s}, e{e}, w{w}
     {
     }
@@ -168,8 +171,7 @@ std::vector<Piece> deserialize(CharIt&& it, CharIt&& end)
         reinterpret_cast<std::uint8_t*>(&length)[i] = data;
     }
 
-    std::vector<Piece> pieces;
-    pieces.reserve(length);
+    std::vector<Piece> pieces(length);
 
     for(std::size_t i = 0U; i < length; i++)
     {
@@ -200,13 +202,24 @@ std::vector<Piece> deserialize(CharIt&& it, CharIt&& end)
             reinterpret_cast<std::uint8_t*>(&indices)[i] = data;
         }
 
-        pieces.emplace_back(p);
+        if (indices[0] == indices[1] && indices[2] == indices[3] && indices[0] == indices[2] && indices[0] == 0U)
+        {
+            /* Nothing here */
+        }
+        else
+        {
+            p.nc = &pieces[indices[0]];
+            p.sc = &pieces[indices[1]];
+            p.ec = &pieces[indices[2]];
+            p.wc = &pieces[indices[3]];
+        }
     }
 
     return pieces;
 }
 
 
+// https://stackoverflow.com/questions/523872/how-do-you-serialize-an-object-in-c
 template<typename CharIt>
 void putByte(std::uint8_t byte, CharIt&& it)
 {
@@ -233,34 +246,17 @@ std::uint8_t getByte(CharIt&& it, CharIt&& end)
  */
 int main(int argc, char** argv)
 {
-    RGB R{255, 0, 0};
-    RGB G{0, 255, 0};
-    RGB B{0, 0, 255};
+        std::ofstream ofile{"patches.bin"};
+        serialize(std::ostreambuf_iterator<char>(ofile), vec);
+        ofile.close();
 
-    std::vector<Piece> vec{};
-    vec.emplace_back(R, R, R, R);
-    vec.emplace_back(B, B, R, R);
-    vec.emplace_back(G, G, B, B);
-
-    {
-        std::ofstream file{"savestate.bin"};
-        serialize(std::ostreambuf_iterator<char>(file), vec);
-        file.close();
-    }
-    {
-        std::ifstream file{"savestate.bin"};
-        if(file)
+        std::ifstream ifile{"patches.bin"};
+        if(ifile)
         {
             std::vector<Piece> vec2 =
-              deserialize(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-
-            if(vec2 != vec)
-            {
-                std::cout << "reeee" << std::endl;
-            }
+              deserialize(std::istreambuf_iterator<char>(ifile), std::istreambuf_iterator<char>());
         }
-        file.close();
-    }
+        ifile.close();
 }
 
 
